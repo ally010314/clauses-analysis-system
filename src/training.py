@@ -9,7 +9,7 @@ from trl import SFTTrainer, SFTConfig
 # ----------------------------------------------------
 # 1. 기본 설정
 # ----------------------------------------------------
-MY_TOKEN = "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"            # 실제 토큰
+MY_TOKEN = os.environ.get("HF_TOKEN")            # 실제 토큰
 BASE_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct"
 MAX_SEQ_LEN = 512
 OUTPUT_DIR = "models/llama31-8b-sft-fold10"

@@ -16,7 +16,7 @@ from sentence_transformers import SentenceTransformer
 
 INDEX_PATH = "rag_index/faiss.index"
 META_PATH  = "rag_index/meta.pkl"          # id -> {law_text, clauseField, ...}
-SFT_DIR    = "models/llama31-8b-sft-fold2"          # 너가 저장한 SFT 체크포인트
+SFT_DIR    = "models/llama31-8b-sft-fold1"          # 너가 저장한 SFT 체크포인트
 EMB_MODEL  = "nlpai-lab/KURE-v1"                    # 제안서 지정 임베딩 모델
 
 # ==== 1) 로드 ====
@@ -37,9 +37,9 @@ def load_sft_model():
     
     print("SFT(LLM) 모델 로딩 중... (시간 소요)") # [API] 서버 시작 시 1회 실행됩니다.
 
-    HF_TOKEN   = "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"  # 또는 문자열로 직접 넣어도 됨
+    HF_TOKEN = os.environ.get("HF_TOKEN")  # 또는 문자열로 직접 넣어도 됨
     BASE_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-    ADAPTER_DIR = "models/llama31-8b-sft-fold2"  # 너의 LoRA 체크포인트 경로
+    ADAPTER_DIR = "models/llama31-8b-sft-fold1"  # 너의 LoRA 체크포인트 경로
 
     bnb_cfg = BitsAndBytesConfig(
         load_in_4bit=True,

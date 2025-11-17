@@ -4,10 +4,9 @@ from peft import PeftModel
 
 # ----- 경로/모델 -----
 BASE_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # 허깅페이스에서 받은 동일 베이스
-ADAPTER_DIR = "/home/ally010314/nlp_project/models/llama31-8b-sft-fold2"       # 네가 저장한 폴더
+ADAPTER_DIR = "/home/ally010314/nlp_project/models/llama31-8b-sft-fold1"       # 네가 저장한 폴더
 
-# (옵션) HF 토큰이 필요하면 아래 변수에 넣어줘
-HF_TOKEN = "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"  # 없으면 None
+HF_TOKEN = os.environ.get("HF_TOKEN")
 token_kwargs = {"token": HF_TOKEN} if HF_TOKEN else {}
 
 # ----- 토크나이저 -----

@@ -25,7 +25,7 @@ def load_sft_model():
     from peft import PeftModel
     from transformers import BitsAndBytesConfig
 
-    HF_TOKEN   = "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"  # 또는 문자열로 직접 넣어도 됨
+    HF_TOKEN = os.environ.get("HF_TOKEN")  # 또는 문자열로 직접 넣어도 됨
     BASE_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct"
     ADAPTER_DIR = "nlp_project/models/llama31-8b-sft-fold2"  # 너의 LoRA 체크포인트 경로
 
