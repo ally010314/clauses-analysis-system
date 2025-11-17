@@ -36,9 +36,9 @@ def load_sft_model():
     from transformers import BitsAndBytesConfig
     
     print("SFT(LLM) 모델 로딩 중... (시간 소요)") # [API] 서버 시작 시 1회 실행됩니다.
-
-    HF_TOKEN = os.environ.get("HF_TOKEN")  # 또는 문자열로 직접 넣어도 됨
-    BASE_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+N = os.environ.get("HF_TOKEN")  # 또는 문자열로 직접 넣어도 됨
+    BA
+    HF_TOKESE_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct"
     ADAPTER_DIR = "models/llama31-8b-sft-fold1"  # 너의 LoRA 체크포인트 경로
 
     bnb_cfg = BitsAndBytesConfig(
