@@ -1,4 +1,5 @@
 # Ignore llama31-8b-sft-fold3 to fold10
+models/
 models/checkpoint-2025
 models/llama31-8b-sft-fold2/
 models/llama31-8b-sft-fold3/
@@ -9,3 +10,4 @@ models/llama31-8b-sft-fold7/
 models/llama31-8b-sft-fold8/
 models/llama31-8b-sft-fold9/
 models/llama31-8b-sft-fold10/
+src/

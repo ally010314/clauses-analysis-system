@@ -8,9 +8,11 @@ from tqdm import tqdm
 from sentence_transformers import SentenceTransformer
 
 # ===== 설정 =====
-JSON_PATH = "nlp_project/data/relateLaword_index.json"  # 🔸 JSON 파일 사용
-INDEX_DIR = "nlp_project/rag_index"
-EMBEDDING_MODEL = os.environ.get("EMB_MODEL", "nlpai-lab/KURE-v1")
+JSON_PATH = "data/relateLaword_index_clean.json"  # 🔸 JSON 파일 사용
+INDEX_DIR = "rag_index_retriever"
+#EMBEDDING_MODEL = os.environ.get("EMB_MODEL", "nlpai-lab/KURE-v1")
+EMBEDDING_MODEL = "models/kure-law-retriever/checkpoint-94"
+
 BATCH = 128
 
 
@@ -47,13 +49,23 @@ def main():
     X = np.vstack(all_vecs).astype("float32")
     dim = X.shape[1]
 
+    # build_index.py (하단 부분만 수정)
+
     # FAISS Index
     index = faiss.IndexFlatIP(dim)
     index.add(X)
     faiss.write_index(index, os.path.join(INDEX_DIR, "faiss.index"))
 
-    # 메타데이터 저장 (LLM 검색용)
-    meta = df[["id", "file_name", "clauseField", "law_text"]].to_dict(orient="records")
+    # 🔧 메타데이터 저장 (id, law_text만 유지 / 나머지는 없는 걸로)
+    meta = []
+    for _, row in df.iterrows():
+        meta.append({
+            "id": int(row["id"]),
+            "file_name": None,         # 예전 코드와 호환 위해 키만 유지
+            "clauseField": None,
+            "law_text": row["law_text"],
+        })
+
     with open(os.path.join(INDEX_DIR, "meta.pkl"), "wb") as f:
         pickle.dump(meta, f)
 

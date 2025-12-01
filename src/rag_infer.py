@@ -1,15 +1,21 @@
 # rag_infer.py
-import argparse, json, os
+import os
 import faiss, numpy as np
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from sentence_transformers import SentenceTransformer
 
-# ==== 0) 경로들 ====
-INDEX_PATH = "nlp_project/rag_index/faiss.index"
-META_PATH  = "nlp_project/rag_index/meta.pkl"          # id -> {law_text, clauseField, ...}
-SFT_DIR    = "nlp_project/models/llama31-8b-sft-fold2"              # 너가 저장한 SFT 체크포인트
-EMB_MODEL  = "nlpai-lab/KURE-v1"                  # 제안서 지정 임베딩 모델
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))      # .../nlp_project/src
+PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))# .../nlp_project
+
+INDEX_PATH = os.path.join(PROJECT_DIR, "rag_index_retriever", "faiss.index")
+META_PATH  = os.path.join(PROJECT_DIR, "rag_index_retriever", "meta.pkl")
+
+EMB_MODEL  = os.path.join(PROJECT_DIR, "models", "kure-law-retriever", "checkpoint-94")
+
+
+
+# 제안서 지정 임베딩 모델
 
 # ==== 1) 로드 ====
 def load_index_and_meta():
@@ -19,16 +25,22 @@ def load_index_and_meta():
         meta = pickle.load(f)
     # meta: list of dicts with keys: id, law_text, clauseField, file_name, ...
     return index, meta
+from peft import PeftModel
+from transformers import BitsAndBytesConfig
 
 def load_sft_model():
-    import os
-    from peft import PeftModel
-    from transformers import BitsAndBytesConfig
-
-    HF_TOKEN = os.environ.get("HF_TOKEN")  # 또는 문자열로 직접 넣어도 됨
+    HF_TOKEN = os.environ.get("HF_TOKEN")
     BASE_MODEL = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-    ADAPTER_DIR = "nlp_project/models/llama31-8b-sft-fold2"  # 너의 LoRA 체크포인트 경로
+    ADAPTER_DIR = SFT_DIR   # 위에서 만든 절대경로 그대로 사용
 
+    print(f"SFT(LLM) 모델 로딩 중... ({ADAPTER_DIR})")
+
+    # 1) 토크나이저
+    tok = AutoTokenizer.from_pretrained(BASE_MODEL, use_fast=True, token=HF_TOKEN)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+
+    # 2) 4bit base
     bnb_cfg = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
@@ -36,12 +48,6 @@ def load_sft_model():
         bnb_4bit_use_double_quant=True,
     )
 
-    # 1) 토크나이저
-    tok = AutoTokenizer.from_pretrained(BASE_MODEL, use_fast=True, token=HF_TOKEN)
-    if tok.pad_token is None:
-        tok.pad_token = tok.eos_token
-
-    # 2) 베이스(4bit, SDPA)  ← 학습 설정과 일치시킴
     base = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL,
         quantization_config=bnb_cfg,
@@ -51,16 +57,17 @@ def load_sft_model():
         token=HF_TOKEN,
     )
 
-    # 3) LoRA 어댑터 로드 (학습 당시 경로 체계와 동일하게 맞춰짐)
+    # 3) 어댑터 경로 체크 (디버깅용)
+    config_path = os.path.join(ADAPTER_DIR, "adapter_config.json")
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"adapter_config.json 이 여기 없음: {config_path}")
+
     model = PeftModel.from_pretrained(base, ADAPTER_DIR)
+    model.eval()
 
-    # 4) 4bit에서는 merge 불가(권장 안됨). 그냥 adapter 붙인 채로 사용.
-    # try:
-    #     model = model.merge_and_unload()  # 4bit면 에러/의미없음
-    # except Exception:
-    #     pass
-
+    print("✅ SFT(LLM) 모델 로드 완료.")
     return tok, model
+
 
 
 
